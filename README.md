@@ -57,12 +57,6 @@ python markterm.py read
 python markterm.py edit mynote.md
 ```
 
-Set your preferred editor:
-
-```bash
-export EDITOR=vim       # or code, nano, notepad, etc.
-```
-
 ### 5. Delete a note
 
 ```bash
