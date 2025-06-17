@@ -1,6 +1,6 @@
 import argparse
 import os
-from utils import create_note, read_note, delete_note, list_notes,  mdread, backup_notes, restore_notes    
+from utils import create_note, read_note, delete_note, list_notes, mdread, backup_notes, restore_notes
 from config import NOTES_DIR
 import subprocess
 from pathlib import Path
@@ -21,6 +21,21 @@ def handle_backup(args):
 def handle_restore(args):
     restore_notes()
 
+def handle_list(args):
+    list_notes()
+
+def handle_read(args):
+    read_note()
+
+def handle_delete(args):
+    delete_note()
+
+def handle_mdread(args):
+    from os.path import join
+    filepath = join("notes", args.filename)
+    mdread(filepath)
+
+# --- Argument Parser Setup ---
 parser = argparse.ArgumentParser(description="MarkTerm - Markdown Terminal Notes")
 subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -31,13 +46,16 @@ new_parser.add_argument("title", help="Note title (without .md)")
 new_parser.set_defaults(func=new_note)
 
 # list
-subparsers.add_parser("list", help="List all notes")
+list_parser = subparsers.add_parser("list", help="List all notes")
+list_parser.set_defaults(func=handle_list)
 
 # read
-subparsers.add_parser("read", help="Read a note")
+read_parser = subparsers.add_parser("read", help="Read a note")
+read_parser.set_defaults(func=handle_read)
 
 # delete
-subparsers.add_parser("delete", help="Delete a note")
+delete_parser = subparsers.add_parser("delete", help="Delete a note")
+delete_parser.set_defaults(func=handle_delete)
 
 # search
 search_parser = subparsers.add_parser("search", help="Search notes with GUI")
@@ -46,6 +64,7 @@ search_parser.set_defaults(func=lambda args: os.system("python markterm_tui_sear
 # mdread
 mdread_parser = subparsers.add_parser("mdread", help="Render a markdown file")
 mdread_parser.add_argument("filename", help="Markdown file path relative to notes/")
+mdread_parser.set_defaults(func=handle_mdread)
 
 # edit
 edit_parser = subparsers.add_parser("edit", help="Edit a markdown note")
@@ -61,23 +80,6 @@ backup_parser.set_defaults(func=handle_backup)
 restore_parser = subparsers.add_parser("restore", help="Restore notes from backup")
 restore_parser.set_defaults(func=handle_restore)
 
+# --- Parse & Dispatch ---
 args = parser.parse_args()
 args.func(args)
-
-if args.command == "new":
-    new_note(args)
-elif args.command == "list":
-    list_notes()
-elif args.command == "read":
-    read_note()
-elif args.command == "delete":
-    delete_note()
-elif args.command == "search":
-    import sys
-    os.execv(sys.executable, [sys.executable, "markterm_tui_search.py"])
-elif args.command == "mdread":
-    from os.path import join
-    filepath = join("notes", args.filename)
-    mdread(filepath)
-elif args.command == "edit":
-    edit_note(args)
