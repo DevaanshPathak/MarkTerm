@@ -1,5 +1,3 @@
-# markterm_tui_edit.py
-
 import sys
 from pathlib import Path
 from textual.app import App, ComposeResult

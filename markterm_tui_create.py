@@ -1,5 +1,3 @@
-# markterm_tui_create.py
-
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Input, TextArea, Static
 from textual.containers import Vertical
