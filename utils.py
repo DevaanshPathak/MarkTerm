@@ -4,24 +4,23 @@ from rich.markdown import Markdown
 from rich.console import Console
 import zipfile
 from datetime import datetime
+import zipfile
+from pathlib import Path
 
-def create_note(title, content):
-    category = input("📁 Enter folder/category (or press enter for general): ").strip().lower()
-    folder = os.path.join(NOTES_DIR, category) if category else NOTES_DIR
+def create_note(title: str, content: str, folder: str = ""):
+    safe_title = title.lower().replace(" ", "_") + ".md"
+    folder_path = os.path.join(NOTES_DIR, folder) if folder else NOTES_DIR
+    os.makedirs(folder_path, exist_ok=True)
 
-    os.makedirs(folder, exist_ok=True)
-
-    filename = title.lower().replace(" ", "_") + ".md"
-    filepath = os.path.join(folder, filename)
-
+    filepath = os.path.join(folder_path, safe_title)
     if os.path.exists(filepath):
-        print("⚠️ Note already exists!")
+        print(f"⚠️ Note '{title}' already exists.")
         return
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(content)
 
-    print(f"✅ Note '{title}' saved to '{folder}'.")
+    print(f"✅ Note '{title}' saved at '{filepath}'")
 
 def list_notes():
     found = False
@@ -112,52 +111,6 @@ def delete_note():
     except ValueError:
         print("❌ Please enter a valid number.")
 
-def search_notes():
-    query = input("🔎 Enter a keyword to search: ").strip().lower()
-
-    if not query:
-        print("⚠️ Please enter a valid search term.")
-        return
-
-    files = [f for f in os.listdir(NOTES_DIR) if f.endswith(".md")]
-    results = []
-
-    for filename in files:
-        title = filename[:-3].replace("_", " ")
-        path = os.path.join(NOTES_DIR, filename)
-
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                content = f.read().lower()
-                if query in title.lower() or query in content:
-                    results.append((title.title(), path))
-        except Exception as e:
-            print(f"⚠️ Error reading {filename}: {e}")
-
-    if not results:
-        print("❌ No matching notes found.")
-        return
-
-    print(f"\n✅ Found {len(results)} matching note(s):")
-    for idx, (title, _) in enumerate(results, 1):
-        print(f"{idx}. {title}")
-
-    try:
-        choice = int(input("\n🔢 Enter the number of the note to read: "))
-        if not (1 <= choice <= len(results)):
-            print("❌ Invalid choice.")
-            return
-
-        _, selected_path = results[choice - 1]
-        with open(selected_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        print("\n🧾 Rendering note:\n")
-        console.print(Markdown(content))
-
-    except ValueError:
-        print("❌ Please enter a valid number.")
-
 def mdread(filepath):
     """
     Renders a markdown file using rich.markdown.
@@ -172,103 +125,36 @@ def mdread(filepath):
         print(f"⚠️ Error reading file: {e}")
 
 def backup_notes():
-    backup_name = f"notes_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
-    backup_path = os.path.join("backups", backup_name)
+    backup_dir = Path("backups")
+    backup_dir.mkdir(exist_ok=True)
 
-    os.makedirs("backups", exist_ok=True)
+    # Debug: Check NOTES_DIR existence
+    notes_path = Path(NOTES_DIR)
+    if not notes_path.exists():
+        print(f"❌ NOTES_DIR '{NOTES_DIR}' does not exist.")
+        return
+
+    backup_path = backup_dir / "backup.zip"
 
     with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk(NOTES_DIR):
-            for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, NOTES_DIR)
-                zipf.write(file_path, arcname)
+        files_added = 0
+        for folder in notes_path.rglob("*"):
+            if folder.is_file():
+                zipf.write(folder, folder.relative_to(notes_path))
+                files_added += 1
 
-    print(f"✅ Notes backed up to {backup_path}")
+    if files_added > 0:
+        print(f"✅ Backup completed: {backup_path} ({files_added} files)")
+    else:
+        print("⚠️ No files found in NOTES_DIR to backup.")
+
 
 def restore_notes():
-    backups = sorted(
-        [f for f in os.listdir("backups") if f.endswith(".zip")],
-        reverse=True
-    )
-
-    if not backups:
-        print("❌ No backups found.")
+    backup_path = Path("backups") / "backup.zip"
+    if not backup_path.exists():
+        print("❌ No backup.zip file found in 'backups/' folder.")
         return
 
-    print("🗂️ Available backups:")
-    for i, b in enumerate(backups, 1):
-        print(f"{i}. {b}")
-
-    try:
-        choice = int(input("🔢 Select backup to restore: "))
-        if not (1 <= choice <= len(backups)):
-            print("❌ Invalid choice.")
-            return
-
-        zip_path = os.path.join("backups", backups[choice - 1])
-
-        confirm = input("⚠️ This will overwrite existing notes. Continue? (y/n): ").strip().lower()
-        if confirm != "y":
-            print("❎ Restore cancelled.")
-            return
-
-        with zipfile.ZipFile(zip_path, 'r') as zipf:
-            zipf.extractall(NOTES_DIR)
-
-        print("✅ Notes restored from backup.")
-
-    except ValueError:
-        print("❌ Please enter a valid number.")
-def edit_note(filepath):
-    """
-    Edits the given markdown file directly in the terminal with original content preloaded.
-    Type 'END' on a new line to finish editing.
-    """
-    if not os.path.exists(filepath):
-        print("❌ File not found.")
-        return
-
-    # Load existing content
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            lines = f.read().splitlines()
-    except Exception as e:
-        print(f"⚠️ Failed to read file: {e}")
-        return
-
-    print("\n📝 Editing note. Modify each line or press Enter to keep unchanged.")
-    print("Type 'END' on a new line to finish editing.\n")
-
-    edited_lines = []
-
-    # Let user edit each line
-    for i, line in enumerate(lines, 1):
-        new_line = input(f"{i:02d}> {line}\n→ ").strip()
-        if new_line.upper() == "END":
-            break
-        edited_lines.append(new_line if new_line else line)
-
-    print("\n✍️ Add new lines below. Type 'END' on a new line to stop.")
-    while True:
-        new_line = input(f"{len(edited_lines)+1:02d}> ")
-        if new_line.strip().upper() == "END":
-            break
-        edited_lines.append(new_line)
-
-    print("\n🔍 Preview of new content:")
-    print("=" * 40)
-    print("\n".join(edited_lines))
-    print("=" * 40)
-
-    confirm = input("💾 Save changes? (y/n): ").strip().lower()
-    if confirm == "y":
-        try:
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write("\n".join(edited_lines) + "\n")
-            print("✅ Note updated successfully.")
-        except Exception as e:
-            print(f"❌ Failed to save note: {e}")
-    else:
-        print("❎ Edit cancelled.")
-        
+    with zipfile.ZipFile(backup_path, 'r') as zipf:
+        zipf.extractall(NOTES_DIR)
+    print(f"✅ Restore completed into: {NOTES_DIR}")

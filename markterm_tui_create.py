@@ -25,13 +25,13 @@ class MarkTermCreateNote(App):
         yield Static("📝 Note Title:")
         yield Input(placeholder="Enter note title...", id="title")
         yield Static("✍️ Content (Markdown):")
-        yield TextArea(placeholder="Write your markdown content here...", id="content", height=20)
+        yield TextArea(id="content")
         yield Footer()
 
     def action_save_note(self) -> None:
         folder = self.query_one("#folder", Input).value.strip().lower()
         title = self.query_one("#title", Input).value.strip()
-        content = self.query_one("#content", TextArea).value
+        content = self.query_one("#content", TextArea).text
 
         if not title:
             self.bell()

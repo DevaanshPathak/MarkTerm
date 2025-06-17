@@ -1,112 +1,118 @@
-# 📝 MarkTerm
+# 📘 MarkTerm
 
-**MarkTerm** is a simple terminal-based Markdown notes manager built with Python.  
-It helps you quickly create, edit, read, search, and organize notes right from your terminal — all stored as `.md` files.
-
----
-
-## ⚡ Features
-
-- 🆕 Create new notes (Markdown format)
-- 📜 Read notes beautifully rendered in the terminal using [`rich`](https://github.com/Textualize/rich)
-- 🗂 List and organize notes in folders
-- 🔎 Search notes by title or content
-- 📝 Edit notes in your favorite `$EDITOR` (e.g., `vim`, `nano`, `code`)
-- ❌ Delete notes easily
-- 📦 Backup all notes to timestamped zip files
-- 🔁 Restore notes from any backup
-- 📁 Tag/folder support through subdirectories inside `notes/`
-- 💻 Simple CLI interface using `argparse`
+A simple Markdown-based terminal note-taking app with both **CLI** and **TUI** interfaces.
 
 ---
 
-## 🛠 Requirements
+## ✨ Features
 
-- Python 3.7+
-- `rich` library (install via pip)
-
-```bash
-pip install rich
-````
+* 📝 **Create** new notes from terminal
+* 📖 **Read** and render notes with Markdown
+* ✏️ **Edit** notes using default system editor
+* ❌ **Delete** notes
+* 🔍 **Search** notes using a beautiful **Textual-based TUI**
+* 💾 **Backup** all notes into a `.zip` archive
+* ♻️ **Restore** notes from a backup archive
+* 📁 All notes are stored as `.md` files inside a folder structure
 
 ---
 
 ## 🚀 Usage
 
-### 1. Create a new note
+### 🔧 Command Syntax
 
 ```bash
-python markterm.py new
+python markterm.py <command> [options]
 ```
 
-### 2. List notes
+### 📋 Available Commands
 
-```bash
-python markterm.py list
-```
+| Command   | Description                                |
+| --------- | ------------------------------------------ |
+| `new`     | Create a new note                          |
+| `list`    | List all existing notes                    |
+| `read`    | Read a note by name                        |
+| `edit`    | Edit a note using your system editor       |
+| `delete`  | Delete a note                              |
+| `search`  | Launch TUI to search and preview notes     |
+| `backup`  | Create a `.zip` backup of all notes        |
+| `restore` | Restore notes from a `.zip` backup archive |
 
-### 3. Read a note
+---
 
-```bash
-python markterm.py read
-```
+## 🔍 TUI Search
 
-### 4. Edit a note
+Powered by [`textual`](https://github.com/Textualize/textual) — a modern TUI framework.
 
-```bash
-python markterm.py edit mynote.md
-```
+### 📚 Features:
 
-### 5. Delete a note
+* Real-time fuzzy search of note titles and content
+* View note preview in a split-pane
+* Click or press `Enter` to view full content
+* Press `Esc` to exit the TUI
 
-```bash
-python markterm.py delete
-```
-
-### 6. Search notes
+> Run it via:
 
 ```bash
 python markterm.py search
 ```
 
-### 7. Preview any Markdown file
+---
+
+## 💾 Backup & Restore
+
+* To back up all your notes:
 
 ```bash
-python markterm.py mdread mynote.md
+python markterm.py backup --output backup.zip
 ```
 
-### 8. Backup all notes
+* To restore from a `.zip` file:
 
 ```bash
-python markterm.py backup
+python markterm.py restore --input backup.zip
 ```
 
-Creates a `.zip` in the `backups/` folder.
+> ⚠️ Restore will **overwrite** existing notes if names match!
 
-### 9. Restore a backup
+---
+
+## 📁 Folder Structure
+
+* All notes are stored inside `notes/` as `.md` files
+* Subfolders are supported (e.g., `notes/school/physics.md`)
+
+---
+
+## 🛠️ Requirements
+
+* Python 3.8+
+* Install dependencies:
 
 ```bash
-python markterm.py restore backup_YYYY-MM-DD_HH-MM-SS.zip
+pip install -r requirements.txt
+```
+
+Contents of `requirements.txt`:
+
+```txt
+textual>=0.38.0
+rich
 ```
 
 ---
 
-## 📁 Project Structure
+## 📌 Future Ideas
 
-```
-markterm/
-├── markterm.py         # Main CLI script
-├── utils.py            # Helper functions
-├── notes/              # All your .md notes go here
-├── backups/            # Automatic zip backups
-└── README.md
-```
+* Tag-based filtering
+* Search across specific folders
+* Sync with cloud storage (Dropbox, Google Drive)
 
 ---
 
-## ✨ Inspired by
+## 🧑‍💻 Author
 
-* Markdown
-* Rich by Textualize
-* Simplicity of the Unix philosophy
-
+**Devaansh Pathak**
+Project: `MarkTerm`
+A CLI + TUI markdown notes app built with love and Python ❤️
+ 
