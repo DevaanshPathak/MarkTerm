@@ -1,5 +1,3 @@
-# utils.py
-
 import os
 from config import NOTES_DIR
 from rich.markdown import Markdown
@@ -224,7 +222,8 @@ def restore_notes():
         print("❌ Please enter a valid number.")
 def edit_note(filepath):
     """
-    Edits the given markdown file directly in the terminal.
+    Edits the given markdown file directly in the terminal with original content preloaded.
+    Type 'END' on a new line to finish editing.
     """
     if not os.path.exists(filepath):
         print("❌ File not found.")
@@ -233,35 +232,43 @@ def edit_note(filepath):
     # Load existing content
     try:
         with open(filepath, "r", encoding="utf-8") as f:
-            original_content = f.read()
+            lines = f.read().splitlines()
     except Exception as e:
         print(f"⚠️ Failed to read file: {e}")
         return
 
-    print("\n📄 Current content (you can edit it below):\n")
-    print("=" * 40)
-    print(original_content)
-    print("=" * 40)
-    print("✏️ Enter new content. Type 'END' on a new line to finish editing.")
+    print("\n📝 Editing note. Modify each line or press Enter to keep unchanged.")
+    print("Type 'END' on a new line to finish editing.\n")
 
-    # Collect new content from user
-    lines = []
-    while True:
-        line = input()
-        if line.strip().upper() == "END":
+    edited_lines = []
+
+    # Let user edit each line
+    for i, line in enumerate(lines, 1):
+        new_line = input(f"{i:02d}> {line}\n→ ").strip()
+        if new_line.upper() == "END":
             break
-        lines.append(line)
+        edited_lines.append(new_line if new_line else line)
 
-    new_content = "\n".join(lines)
+    print("\n✍️ Add new lines below. Type 'END' on a new line to stop.")
+    while True:
+        new_line = input(f"{len(edited_lines)+1:02d}> ")
+        if new_line.strip().upper() == "END":
+            break
+        edited_lines.append(new_line)
 
-    # Confirm and save
+    print("\n🔍 Preview of new content:")
+    print("=" * 40)
+    print("\n".join(edited_lines))
+    print("=" * 40)
+
     confirm = input("💾 Save changes? (y/n): ").strip().lower()
     if confirm == "y":
         try:
             with open(filepath, "w", encoding="utf-8") as f:
-                f.write(new_content)
+                f.write("\n".join(edited_lines) + "\n")
             print("✅ Note updated successfully.")
         except Exception as e:
             print(f"❌ Failed to save note: {e}")
     else:
         print("❎ Edit cancelled.")
+        

@@ -7,7 +7,8 @@ parser = argparse.ArgumentParser(description="MarkTerm - Markdown Terminal Notes
 subparsers = parser.add_subparsers(dest="command", required=True)
 
 # new
-subparsers.add_parser("new", help="Create a new note")
+new_parser = subparsers.add_parser("new", help="Create a new note")
+new_parser.add_argument("--tui", action="store_true", help="Use TUI editor")
 
 # list
 subparsers.add_parser("list", help="List all notes")
@@ -37,21 +38,19 @@ subparsers.add_parser("edit", help="Edit an note")
 args = parser.parse_args()
 
 if args.command == "new":
-    title = input("📝 Enter note title: ").strip()
-    print("✏️ Write content below. Type 'END' on a new line to finish:\n")
-
-    lines = []
-    while True:
-        line = input()
-        if line.strip().upper() == "END":
-            break
-        lines.append(line)
-
-    content = "\n".join(lines).strip()
-    if title and content:
-        create_note(title, content)
+    if args.tui:
+        os.system("python markterm_tui_create.py")
     else:
-        print("❌ Title or content cannot be empty.")
+        title = input("📝 Title: ").strip()
+        print("✍️ Write content below. Type 'END' on a new line to finish.")
+        content_lines = []
+        while True:
+            line = input()
+            if line.strip() == "END":
+                break
+            content_lines.append(line)
+        content = "\n".join(content_lines)
+        create_note(title, content)
 elif args.command == "list":
     list_notes()
 elif args.command == "read":
