@@ -4,7 +4,8 @@ import os
 from config import NOTES_DIR
 from rich.markdown import Markdown
 from rich.console import Console
-
+import zipfile
+from datetime import datetime
 
 def create_note(title, content):
     category = input("📁 Enter folder/category (or press enter for general): ").strip().lower()
@@ -171,3 +172,96 @@ def mdread(filepath):
         print("❌ File not found.")
     except Exception as e:
         print(f"⚠️ Error reading file: {e}")
+
+def backup_notes():
+    backup_name = f"notes_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    backup_path = os.path.join("backups", backup_name)
+
+    os.makedirs("backups", exist_ok=True)
+
+    with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, _, files in os.walk(NOTES_DIR):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, NOTES_DIR)
+                zipf.write(file_path, arcname)
+
+    print(f"✅ Notes backed up to {backup_path}")
+
+def restore_notes():
+    backups = sorted(
+        [f for f in os.listdir("backups") if f.endswith(".zip")],
+        reverse=True
+    )
+
+    if not backups:
+        print("❌ No backups found.")
+        return
+
+    print("🗂️ Available backups:")
+    for i, b in enumerate(backups, 1):
+        print(f"{i}. {b}")
+
+    try:
+        choice = int(input("🔢 Select backup to restore: "))
+        if not (1 <= choice <= len(backups)):
+            print("❌ Invalid choice.")
+            return
+
+        zip_path = os.path.join("backups", backups[choice - 1])
+
+        confirm = input("⚠️ This will overwrite existing notes. Continue? (y/n): ").strip().lower()
+        if confirm != "y":
+            print("❎ Restore cancelled.")
+            return
+
+        with zipfile.ZipFile(zip_path, 'r') as zipf:
+            zipf.extractall(NOTES_DIR)
+
+        print("✅ Notes restored from backup.")
+
+    except ValueError:
+        print("❌ Please enter a valid number.")
+def edit_note(filepath):
+    """
+    Edits the given markdown file directly in the terminal.
+    """
+    if not os.path.exists(filepath):
+        print("❌ File not found.")
+        return
+
+    # Load existing content
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            original_content = f.read()
+    except Exception as e:
+        print(f"⚠️ Failed to read file: {e}")
+        return
+
+    print("\n📄 Current content (you can edit it below):\n")
+    print("=" * 40)
+    print(original_content)
+    print("=" * 40)
+    print("✏️ Enter new content. Type 'END' on a new line to finish editing.")
+
+    # Collect new content from user
+    lines = []
+    while True:
+        line = input()
+        if line.strip().upper() == "END":
+            break
+        lines.append(line)
+
+    new_content = "\n".join(lines)
+
+    # Confirm and save
+    confirm = input("💾 Save changes? (y/n): ").strip().lower()
+    if confirm == "y":
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            print("✅ Note updated successfully.")
+        except Exception as e:
+            print(f"❌ Failed to save note: {e}")
+    else:
+        print("❎ Edit cancelled.")
